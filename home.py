@@ -1,7 +1,7 @@
 import streamlit as st
 import socket
 from datetime import datetime
-import pyfiglet
+from ports import ports_info
 
 
 def get_ip(url):
@@ -50,8 +50,14 @@ elif file_select == 'Endereço IP':
     
 
     
-limite = st.sidebar.slider("How old are you?", 0, 65535, 800)
-st.sidebar.write("Você está Escaneando Até a Porta ", limite)
+# limite = st.sidebar.slider("Até qual porta?", 0, 65535, 800)
+# st.sidebar.write("Você está Escaneando Até a Porta ", limite)
+
+lf = st.sidebar.number_input("Limite Inferior: ", min_value=1, max_value=65534, value=1)
+ls = st.sidebar.number_input("Limite Superior: ", min_value=2, max_value=65535, value=65535)
+
+# Display the inputted number
+st.sidebar.write("Vamos Escanear Portas entre",lf,"e", ls)
 
 if st.button("Run Port Scanner"):
 
@@ -64,9 +70,8 @@ if st.button("Run Port Scanner"):
     
     try:
         
-	
         # will scan ports between 1 to 65,535
-        for port in range(1,65535):
+        for port in range(lf, ls+1):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             socket.setdefaulttimeout(1)
 
@@ -75,9 +80,18 @@ if st.button("Run Port Scanner"):
             result = s.connect_ex((ip_addr,port))
             if result ==0:
                 st.write("Port {} is open".format(port))
-            else: 
+            else:
                 st.write("Port {} is closed".format(port))
+
+            if port in ports_info:
+                d = ports_info[port]
+                st.write(f"Service Name: {d["Service name"]}")
+                st.write(f"Transport Protocol: {d["Transport protocol"]}")
+                st.write(f"Description: {d['Description']}")
+            st.write("-" * 50)
+            
             s.close()
+        st.write("Processo Concluído")
     except:
 
         st.write("Conexão Não Foi Bem Sucedida, Tente com Outro Endereço")
